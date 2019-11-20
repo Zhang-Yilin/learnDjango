@@ -1,0 +1,267 @@
+{% extends "blog_base.html" %}
+{% load static %}
+{% load commitTag %}
+{% load likeTag %}
+
+{% block title %}
+    {{ blog.title }}
+{% endblock %}
+
+{% block head_extend %}
+    <link rel="stylesheet" href="/static/css/blog_detail.css">
+    <script type="text/javascript" src="{% static "ckeditor/ckeditor-init.js" %}"></script>
+    <script type="text/javascript" src="{% static "ckeditor/ckeditor/ckeditor.js" %}"></script>
+    <script type="text/javascript" src="/static/js/blog_detail.js"></script>
+{% endblock %}
+
+{% block content %}
+    <h2>
+        {{ blog.title }}
+
+    </h2>
+    <br>
+    <h6>
+        {{ blog.last_update_time }}
+    </h6>
+    <br>
+        <p>类别：
+        <a href="{% url 'blog_with_type' blog.blog_type.pk %}">{{ blog.blog_type }}</a>
+
+        </p>
+        <p>阅读次数:{{ read_num }} &nbsp;&nbsp; 评论次数： {% get_commit_num blog %}</p>
+    <br>
+    <p class="show">
+        {{ blog.content|safe }}
+    </p>
+    <div class="like" onclick="likeChange(this, 'blog', {{ blog.pk }})">
+        <span class="glyphicon glyphicon-thumbs-up {% like_status blog user %}" ></span>
+        <span class="like_num">{% like_num blog %}</span>
+        <span>喜欢</span>
+    </div>
+    <!-- 上一篇与下一篇 -->
+    <ul>
+        {% if previous_blog %}
+        <li><a href ="{% url 'blog_detail' previous_blog.pk %}">上一篇: {{ previous_blog.title }}</a></li>
+        {% else %}
+        <li><p>没有上一篇</p></li>
+        {% endif %}
+        {% if next_blog %}
+        <li><a href = "{% url 'blog_detail' next_blog.pk %}">下一篇:{{ next_blog.title }}</a></li>
+        {% else %}
+        <li><p>没有下一篇</p></li>
+        {% endif %}
+    </ul>
+    <!-- 评论 -->
+    <div class="row">
+        <div class="col-xs-10 col-xs-offset-1">
+            <div class = "comment-area">
+                <!-- 登陆与评论框 -->
+                <h3 class = "comment-area-title">提交评论</h3>
+                {% if user.is_authenticated %}
+                    <p>{{user.username}}:欢迎评论</p>
+                    <form id="commit_form" action="{% url 'commit_submit' %}" method="post">
+                        <div id="reply_response" style="display: none;">
+                            <p>回复：</p>
+                            <div id="reply_content"></div>
+                        </div>
+                        {% csrf_token %}
+                        {% for field in commit_form %}
+                        {{ field }}
+                        {% endfor %}
+                    <br>
+                        <input type="submit" class="btn btn-primary" value="commit">
+                    </form>
+                {% else %}
+                    <p>您未登录</p>
+                    <a class="btn-primary" href = "../login/?from={{ request.get_full_path }}">登陆</a>or
+                    <a class="btn-warning" href = "../register/?from={{ request.get_full_path }}">注册</a>
+                {% endif %}
+            </div>
+
+            <!-- 评论 -->
+            <div class = "comment-area">
+                <h3 class = "comment-area-title">评论:</h3>
+                <div id="commit_list">
+                    {% for commit in commits %}
+                        <div id = "root_{{ commit.pk }}" class="comment">
+                        <span>{{ commit.user.username }}</span>
+                            <span>({{ commit.commit_time|date:"Y-m-d h:n:s" }}):</span>
+                        <div id ="commit_{{ commit.pk }}">
+                            {{ commit.text|safe}}
+                        </div>
+                        <a href="javascript:reply({{ commit.pk }});">回复</a>
+                        <br>
+                            <div class="like" onclick="likeChange(this, 'commit', {{commit.pk}})">
+                                <span class="glyphicon glyphicon-thumbs-up {% like_status commit user %}" ></span>
+                                <span class="like_num">{% like_num commit %}</span>
+                                <span>喜欢</span>
+                            </div>
+
+
+                        {% for reply in commit.rootc.all %}
+                            <div class="reply">
+                            <span>{{ reply.user.username }}</span>
+                                <span>({{ reply.commit_time|date:"Y-m-d h:n:s" }})回复{{ commit.user.username }}:</span>
+                            <br>
+                            <div id ="commit_{{ reply.pk }}">
+                                {{ reply.text|safe }}
+                            </div>
+                            <a href="javascript:reply({{ reply.pk }});">回复</a>
+                            </div>
+                        {% endfor %}
+                        </div>
+                    {% empty %}
+                        <li>暂无评论</li>
+                    {% endfor %}
+                </div>
+            </div>
+
+
+        <!-- Modal -->
+<div class="modal fade" id="login_modal" tabindex="-1" role="dialog">
+            <div class="modal-dialog modal-sm" role="document">
+                <div class="modal-content">
+                    <form id="login_medal_form" action="" method="POST">
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                            <h4 class="modal-title">登录</h4>
+                        </div>
+
+                        <div class="modal-body">
+                            {% csrf_token %}
+                            {% for field in login_form %}
+                                <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                                {{ field }}
+                            {% endfor %}
+                            <span id="login_medal_tip" class="text-danger"></span>
+                        </div>
+
+                        <div class="modal-footer">
+                            <button type="submit" class="btn btn-primary">登录</button>
+                            <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+</div>
+    </div>
+{% endblock %}
+
+{% block stript_extend %}
+    <script type="text/javascript">
+
+        $("#commit_form").submit(function () {
+            CKEDITOR.instances['id_text'].updateElement();
+
+             $.ajax({
+                url:"{% url 'commit_submit' %}",
+                type:'POST',
+                data:$(this).serialize(),
+                cache:false,
+
+                success:function (data) {
+                    console.log(data);
+                    if(data['statue']=="SUCCESS")
+                    {
+
+                        // 插入数据
+                        if ($('#reply_comment_id').val() == 0){
+                            var comment_html = '<div id = "root_'+data['pk']+'" class="comment">'+
+                        '<span>' + data['username']+ '</span> <span>(' + data['commit_time'] +
+                            ' ):</span> <div id ="commit_'+ data['pk']+'">'+
+                            data['text'] + '</div><a href="javascript:reply('+data['pk']+');">回复</a> </div>';
+
+                        $("#commit_list").prepend(comment_html);
+
+                        }else {
+                           var reply_html = '<div class="reply">' +
+                            '<span>'+data['username']+'</span>'+
+                            '<span>('+ data['commit_time'] +')回复{{ commit.user.username }}:</span>' +
+                            '<br><div id ="commit_'+data['pk']+'">' +
+                            data['text'] + '</div>' +
+                            '<a href="javascript:reply('+data['pk']+');">回复</a></div>';
+                            $("#root_"+data['root_pk']).append(reply_html);
+
+                        }
+                            CKEDITOR.instances['id_text'].setData('');
+                            $("#reply_response").hide();
+                            $('#reply_comment_id').val('0');
+                    }else {
+                        $("#comment_error").text(data['message']);
+                    }
+                },
+                error:function (xhr) {
+                    console.log(xhr);
+                }
+
+            });
+            return false;
+        });
+        function reply(reply_id) {
+            $("#reply_comment_id").val(reply_id);
+            var html=$("#commit_"+ reply_id).html();
+            $("#reply_content").html(html);
+            $("#reply_response").show();
+
+            $('html').animate({scrollTop:$("#commit_form").offset().top-60}, 300, function () {
+                CKEDITOR.instances['id_text'].focus();
+            })
+        }
+        function likeChange(obj, content_type, object_id){
+            var is_like = obj.getElementsByClassName('active').length == 0;
+            $.ajax({
+                url:"{% url 'like_change' %}",
+                type:'GET',
+                data:{
+                    content_type:content_type,
+                    object_id:object_id,
+                    is_like:is_like
+                },
+                cache:false,
+                 success:function (data) {
+                     if(data['status']=='SUCCESS'){
+                        // 更新点赞状态
+                        var element = $(obj.getElementsByClassName('glyphicon'));
+                        if(is_like){
+                            element.addClass('active');
+                        }else{
+                            element.removeClass('active');
+                        }
+                        // 更新点赞数量
+                        var liked_num = $(obj.getElementsByClassName('like_num'));
+                        liked_num.text(data['like_num']);
+                    }else{
+                         if(data['code'] ==400 ){
+                            $('#login_modal').modal("show");
+                    }else{
+                         alert(data['message']);
+                         }
+                     }
+
+                },
+                error:function (xhr) {
+                    console.log(xhr);
+                }});
+
+        }
+
+
+         $("#login_medal_form").submit(function(event){
+            event.preventDefault();
+            $.ajax({
+                url: '{% url "login_for_medal" %}',
+                type: 'POST',
+                data: $(this).serialize(),
+                cache: false,
+                success: function(data){
+                    if(data['status']=='SUCCESS'){
+                        window.location.reload();
+                    }else{
+                        $('#login_medal_tip').text('用户名或密码不正确');
+                    }
+                }
+            });
+        });
+    </script>
+{% endblock %}

@@ -1,0 +1,9 @@
+h3.home_context {
+    font-size: 222%;
+    left:50%;
+    top:50%;
+    transform:translate(50%,50%);
+}
+div.django-ckeditor-widget{
+    width:100%;
+}

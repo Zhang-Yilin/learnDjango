@@ -1,0 +1,100 @@
+{% extends "blog_base.html" %}
+{% load staticfiles %}
+{% load commitTag %}
+{% load likeTag %}
+{% block head_extend %}
+    <link rel="stylesheet" href="/static/css/blog_list.css">
+{% endblock %}
+
+{% block content %}
+    <div class="container">
+        <div class="row">
+            <div class="col-xs-12 col-sm-10 col-md-8 ">
+
+
+            <div class="panel panel-default">
+            {% block subtitle %}
+
+             {% endblock %}
+                <div class="panel-body">
+                    {% for blog,num in record.items %}
+                    <a href="/blog/{{ blog.id }}">{{ blog.title }}</a>
+                        <br>
+                    <h4>作者：{{ blog.author }}</h4>
+                    <p>发表时间：{{ blog.created_time|date:"Y-m-d G:n:s" }}&nbsp;&nbsp; 阅读:{{ num }}
+                        &nbsp;&nbsp; 评论{% get_commit_num blog %}
+                        &nbsp;&nbsp; 点赞{% get_like_num blog %}
+                    </p>
+                    <p>{{ blog.content|striptags|truncatechars_html:20 }}</p>
+                    <hr>
+                        {% empty %}
+                        <p>暂无</p>
+                    {% endfor %}
+                </div>
+            </div>
+
+
+            </div>
+            <div class="hidden-xs col-sm-3 col-md-4">
+
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                <h3 class="panel-title">博客分类</h3>
+                </div>
+                <div class="panel-body">
+                <ul class="blog-types">
+                {% for type in types %}
+                        <li><a href="{% url 'blog_with_type' type.pk %}" >{{ type.type_name }}:{{ type.blog_count }}</a></li>
+                        {% empty %}
+                        <li></li>
+                    {% endfor %}
+                </ul>
+                </div>
+            </div>
+
+
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    日期
+                </div>
+                <div class="panel-body">
+                <ul class="blog-types">
+                    {% for d in blog_date %}
+                        <li><a href="{% url 'blog_date' d.year d.month %}">{{ d|date:"Y-m" }}</a></li>
+                    {% endfor %}
+                </ul>
+                </div>
+            </div>
+
+            </div>
+        </div>
+
+    <nav aria-label="...">
+     <ul class="pagination">
+     {% if page_of_blogs.has_previous %}
+        <li class="disabled"><a href="?page={{ page_of_blogs.previous_page_number }}" aria-label="Previous"><span aria-hidden="true">&laquo;</span></a></li>
+
+     {% endif %}
+         {% for page_num in page_range %}
+             {% if page_num == page_of_blogs.number %}
+                <li class="active"><a href="?page={{ page_num }}">{{page_num}} <span class="sr-only">(current)</span></a></li>
+             {% else %}
+                 <li><a href="?page={{ page_num }}">{{page_num}} </a></li>
+             {% endif %}
+         {% endfor %}
+
+    <li>
+        {% if page_of_blogs.has_next %}
+      <a href="?page={{ page_of_blogs.next_page_number }}" aria-label="Next">
+        <span aria-hidden="true">&raquo;</span>
+          {% endif %}
+      </a>
+    </li>
+  </ul>
+</nav>
+
+
+    </div>
+
+
+{% endblock %}

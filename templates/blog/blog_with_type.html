@@ -1,0 +1,20 @@
+{% extends "blog_base.html" %}
+{% block title %}
+    {{ type.type_name }}
+{% endblock %}
+
+{% block content %}
+    <p>总数：{{ blogs|length }}</p>
+    </div>
+    <h3> {{ type.type_name  }} </h3>
+    {% for blog in blogs %}
+        <a href="/blog/{{ blog.id }}">{{ blog.title }}</a>
+        <br>
+        <p>作者：{{ blog.author }}</p>
+        <p>发表时间：{{ blog.created_time|date:"Y-m-d G:n:s" }}</p>
+        <p>{{ blog.content|truncatechars_html:20 }}</p>
+        <br>
+        {% empty %}
+        <p>--暂无--</p>
+    {% endfor %}
+{% endblock %}

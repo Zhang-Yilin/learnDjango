@@ -1,0 +1,13 @@
+{% extends "blog/blog_list_base.html" %}
+{% block title %}
+    Blog List
+{% endblock %}
+
+
+    {% block subtitle %}
+
+         <div class="panel-heading">
+                <h3 class="panel-title">博客列表</h3>
+                    <span class="sum-num">总数：{{ page_of_blogs.paginator.count}}</span>
+                </div>
+        {% endblock %}

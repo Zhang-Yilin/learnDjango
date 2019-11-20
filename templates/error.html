@@ -1,0 +1,12 @@
+{% extends 'blog_base.html' %}
+{% load staticfiles %}
+
+{% block title %}
+    错误
+{% endblock %}
+
+{% block content %}
+    {{ message }}
+    <br>
+    <a href = {{ redirect }}> 返回 </a>
+{% endblock %}

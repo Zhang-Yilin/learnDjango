@@ -1,0 +1,13 @@
+{% extends "blog/blog_list_base.html" %}
+{% block title %}
+    Blog List By Date:{{ year }}年{{ month }}月
+{% endblock %}
+
+
+    {% block subtitle %}
+
+         <div class="panel-heading">
+                <h3 class="panel-title">日期: {{ year }}年{{ month }}月</h3>
+                    <span class="sum-num">总数：{{ page_of_blogs.paginator.count}}</span>
+                </div>
+        {% endblock %}

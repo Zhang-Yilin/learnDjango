@@ -1,0 +1,15 @@
+div.reply{
+    margin-left: 2em;
+}
+div.comment{
+    border-bottom: 1px solid #ccc;
+}
+div.like{
+    color:#337ab7;
+    cursor:pointer;
+    display: inline-block;
+    padding: 0.5em 0.3em;
+}
+div.like .active{
+    color:#ac2925;
+}

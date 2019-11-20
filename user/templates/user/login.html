@@ -1,0 +1,23 @@
+{% extends "blog_base.html" %}
+{% block title %}
+    登陆
+{% endblock %}
+
+{% block content %}
+    <div class="container">
+        <div class="row">
+            <div class="col-xs-4 col-xs-offset-4">
+            <form action="" method="post">
+                <p>未登录</p>
+                {% csrf_token %}
+                {% for field in login_form %}
+                    {% if not field.is_hidden %}
+                    {{ field.label }}
+                    {% endif %}
+                {% endfor %}
+                <input type="submit" value="login"class="btn btn-primary">
+            </form>
+                </div>
+            </div>
+    </div>
+{% endblock %}
